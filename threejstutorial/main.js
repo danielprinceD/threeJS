@@ -4,8 +4,15 @@ import * as dat from 'dat.gui'
 import '/style.css'
 import stars from './img/stars.jpg'
 import zoro from './img/zoro.jpg'
+import rasengan from './img/rasengan3.png'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+
+const luffyUrl = new URL('./img/luffy3.glb',import.meta.url)
+const zoroUrl = new URL('./img/zoro3.glb',import.meta.url)
+const logoUrl = new URL('./img/onepiecelogo.glb',import.meta.url)
 
 const renderer = new THREE.WebGLRenderer()
+
 
 renderer.setSize(window.innerWidth,window.innerHeight)
 
@@ -36,11 +43,13 @@ const camera = new THREE.PerspectiveCamera(
 
 //Ball 
 
+
 const boxGeometry = new THREE.SphereGeometry(3)
 const boxMaterial = new THREE.MeshStandardMaterial({
-  color:0xff0000,
+  map:textLoad.load(rasengan),
   wireframe:false,
 });
+
 
 
 
@@ -56,10 +65,9 @@ const options= {
    sphereColor:'#fff',
    wireFrame:false,
    speed:0.015,
-   spotAngle:0.2,
+   spotAngle:0.5,
    spotPnumbra:0,
-   spotIntensity:0,
-   gridhelp:true,
+   spotIntensity:200
 
 }
 
@@ -119,11 +127,13 @@ scene.add(ambient)
 // scene.add(shadowCam)
 
 
-const spot = new THREE.SpotLight('0xffffff',100)
+const spot = new THREE.SpotLight(0xffffff,2)
 spot.position.y=25
 spot.position.z=5
+
 const spotHelp=new THREE.SpotLightHelper(spot)
 spot.castShadow=true
+
 scene.add(spot)
 
 scene.add(spotHelp)
@@ -138,7 +148,7 @@ const zoroMaterial = new THREE.MeshBasicMaterial(
 )
 const zoroBox= new THREE.Mesh(zoroGeometry,zoroMaterial)
 zoroBox.castShadow=true
-zoroBox.position.set(0,2.6,5)
+zoroBox.position.set(0,2.6,-5)
 scene.add(zoroBox)
 
 const planeOption={planeColor:'#fff'}
@@ -153,6 +163,8 @@ gui.addColor(planeOption,'planeColor').onChange(
 scene.add(plane)
 
 
+
+
 //Grid Helper
 
 const gridhelper = new THREE.GridHelper(25,30)
@@ -160,8 +172,105 @@ scene.add(gridhelper)
 
 
 
+//Cursor 
 
+const mousePointer = new THREE.Vector2();
+const raycaster = new THREE.Raycaster()
+window.addEventListener('mousemove',(e)=>
+{
+  mousePointer.x=(e.clientX/window.innerWidth)*2-1
+  mousePointer.y=-(e.clientY/window.innerHeight)*2+1
+})
+
+
+const ballGeo =new THREE.SphereGeometry()
+const ballMat = new THREE.MeshBasicMaterial(
+{
+  color:'0xff00f0'
+}  
+)
+
+const ball=new THREE.Mesh(ballGeo,ballMat)
+ball.position.x=10
+zoroBox.add(ball)
+
+const ballObj=new THREE.Object3D()
+scene.add(ballObj)
+ballObj.add(ball)
+ballObj.position.y=3
+
+
+
+const boxId = box.id;
+
+zoroBox.name='thezoro'
 let step=0
+
+
+// Plane geometry 2
+
+const plane2Geo = new THREE.PlaneGeometry(10,10,10,10)
+const plane2Mat = new THREE.MeshBasicMaterial(
+
+  {
+    color:0xffffff,
+    wireframe:true
+  }
+)
+
+const plane2 = new THREE.Mesh(plane2Geo,plane2Mat)
+plane2.position.set(10,10,10)
+plane2.rotation.x=-0.5*Math.PI
+scene.add(plane2)
+
+console.log(plane2.geometry.attributes.position.array);
+// console.log(plane2.geometry.attributes.position.array[]+=10);
+
+
+
+//Asset Loader
+
+const assetLoader = new GLTFLoader();
+assetLoader.load(luffyUrl.href,function(gltf){
+  const luffy = gltf.scene;
+  
+  luffy.position.z=7
+  luffy.position.y=3
+  luffy.rotation.y=10
+
+  luffy.receiveShadow=true
+  scene.add(luffy);
+
+  
+
+},undefined,function(){
+  console.log("error");
+})
+
+
+assetLoader.load(zoroUrl.href,function(gltf){
+  const zoro3 = gltf.scene;
+  zoro3.position.z=4
+  scene.add(zoro3);
+
+},undefined,function(){
+  console.log("error");
+})
+
+
+assetLoader.load(logoUrl.href,function(gltf){
+  const logo3 = gltf.scene;
+  logo3.position.y=0.2
+  scene.add(logo3);
+  
+
+
+},undefined,function(){
+  console.log("error");
+})
+
+
+
 
 function animate()
 {
@@ -176,6 +285,31 @@ function animate()
   spot.intensity=options.spotIntensity
 
 spotHelp.update()
+
+
+raycaster.setFromCamera(mousePointer,camera)
+zoroBox.rotation.y+=0.1/10
+ballObj.rotation.y+=0.09/10
+
+
+const intersects=raycaster.intersectObjects(scene.children)
+for (let i=0 ; i<intersects.length;i++)
+{
+  if(intersects[i].object.id===boxId)
+  {
+    intersects[i].object.material.color.set(0x000000)
+  }
+
+
+  
+
+}
+
+window.addEventListener('resize',()=>{
+  camera.aspect(window.innerWidth/window.innerHeight)
+  
+})
+
 
   step+=options.speed
   renderer.render(scene,camera)
