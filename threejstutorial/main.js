@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui'
 import '/style.css'
+import stars from './img/stars.jpg'
+import zoro from './img/zoro.jpg'
 
 const renderer = new THREE.WebGLRenderer()
 
@@ -11,10 +13,11 @@ renderer.shadowMap.enabled=true
 
 document.body.appendChild(renderer.domElement);
 
-
-
 const scene = new THREE.Scene();
 
+const textLoad = new THREE.TextureLoader()
+
+scene.background=textLoad.load(stars)
 
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -55,7 +58,8 @@ const options= {
    speed:0.015,
    spotAngle:0.2,
    spotPnumbra:0,
-   spotIntensity:0
+   spotIntensity:0,
+   gridhelp:true,
 
 }
 
@@ -96,7 +100,7 @@ plane.rotation.x=-0.5*Math.PI
 
 plane.receiveShadow=true;
 
-const ambient = new THREE.AmbientLight('0x000000',0.5)
+const ambient = new THREE.AmbientLight('0xffff00',0.5)
 scene.add(ambient)
 
 // const direction = new THREE.DirectionalLight('0xffffff',4)
@@ -126,6 +130,16 @@ scene.add(spotHelp)
 
 
 
+const zoroGeometry = new THREE.BoxGeometry(5,5,5)
+const zoroMaterial = new THREE.MeshBasicMaterial(
+  {
+    map:textLoad.load(zoro)
+  }
+)
+const zoroBox= new THREE.Mesh(zoroGeometry,zoroMaterial)
+zoroBox.castShadow=true
+zoroBox.position.set(0,2.6,5)
+scene.add(zoroBox)
 
 const planeOption={planeColor:'#fff'}
 
@@ -143,6 +157,10 @@ scene.add(plane)
 
 const gridhelper = new THREE.GridHelper(25,30)
 scene.add(gridhelper)
+
+
+
+
 let step=0
 
 function animate()
